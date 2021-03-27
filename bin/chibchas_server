@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+
+from chibchas.webapp import run_server
+import argparse
+
+parser = argparse.ArgumentParser(description='Chibchas Server')
+parser.add_argument('--ip', type=str, default='localhost',
+                    help='Flask server (default localhost)')
+parser.add_argument('--port', type=int, default=9999,
+                    help='Flask server port (default 9999)')
+
+run_server()
