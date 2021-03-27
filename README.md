@@ -1,2 +1,2 @@
-# Chia
+# Chibchas
 InstituLAC Automation Tools
