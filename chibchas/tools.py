@@ -455,7 +455,7 @@ def format_ptt(workbook):
     worksheet.set_row_pixels(20, 40)
     worksheet.set_row_pixels(22, 40)
 
-def login(user,password,sleep=0.8):
+def login(user,password,sleep=0.8,headless=True):
     #def login(user,password): → browser, otro, otro
     # MAIN CODE
 
@@ -465,7 +465,7 @@ def login(user,password,sleep=0.8):
     # passw=
 
     # login
-    browser = h.start_firefox('https://scienti.minciencias.gov.co/institulac2-war/',headless=True)
+    browser = h.start_firefox('https://scienti.minciencias.gov.co/institulac2-war/',headless=headless)
 
     #browser = h.start_firefox('https://scienti.minciencias.gov.co/institulac2-war/')
     time.sleep(sleep)
@@ -586,7 +586,7 @@ def get_groups(browser,sleep=0.8):
         time.sleep(sleep)
     return browser,dfg
 
-def get_DB(browser,sleep=0.8,DIR='InstituLAC'):
+def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None):
     os.makedirs(DIR,exist_ok=True)
     browser,dfg=get_groups(browser)
     dfg = dfg.reset_index(drop=True)
@@ -600,7 +600,7 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC'):
     DB = [] # 
     LP = []
     LR = [] 
-    for idx in dfg.index[:1]:       # TEST
+    for idx in dfg.index[start:end]:       # TEST
 
         # create db for store things related to group
         DBG = {}
@@ -818,15 +818,6 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC'):
 
     browser.close()    
     return DB,dfg
-
-def dummy_fix_df(DB):
-    for i in range(len(DB)):
-        for k in list(DB[i].keys())[2:]:
-            for kk in  DB[i][k].keys():
-                #print(i,k,kk)
-                if list(DB[i][k][kk].values())[0] is None:
-                    DB[i][k][kk]={'PAT_P_TABLE': pd.DataFrame()} 
-    return DB
 
 def to_excel(DB,dfg,DIR='InstituLAC'):
 #if True:
@@ -1659,10 +1650,21 @@ def to_excel(DB,dfg,DIR='InstituLAC'):
             pass
         #----------------w12---------------------------
         writer.save()
+
+
+def dummy_fix_df(DB):
+    for i in range(len(DB)):
+        for k in list(DB[i].keys())[2:]:
+            for kk in  DB[i][k].keys():
+                #print(i,k,kk)
+                if list(DB[i][k][kk].values())[0] is None:
+                    DB[i][k][kk]={kk: pd.DataFrame()} 
+    return DB
+
         
-def main(user,password,DIR='InstituLAC'):
-    browser=login(user,password)
+def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None):
+    browser=login(user,password,headless=headless)
     time.sleep(5)
-    DB,dfg=get_DB(browser,DIR=DIR)
+    DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end)
     DB=dummy_fix_df(DB)
     to_excel(DB,dfg,DIR=DIR)        
