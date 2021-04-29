@@ -820,7 +820,6 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None):
     return DB,dfg
 
 def to_excel(DB,dfg,DIR='InstituLAC'):
-#if True:
     os.makedirs(DIR,exist_ok=True)
     global general
     global writer
