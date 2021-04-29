@@ -584,6 +584,10 @@ def get_groups(browser,sleep=0.8):
 
         time.sleep(sleep)
         time.sleep(sleep)
+    
+    dfg=dfg.reset_index(drop=True)
+    with open(f'{DIR}/dfg.pickle', 'wb') as f:
+        pickle.dump(dfg, f)        
     return browser,dfg
 
 def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
@@ -695,6 +699,7 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
             h.click(i)
 
         # PAR: products with revisions
+        time.sleep(sleep*3) #DEBUG TIME
         h.wait_until(lambda: browser.find_element_by_xpath('//*[@id="ProdsAval"]'))
         h.click(browser.find_element_by_xpath('//*[@id="ProdsAval"]'))
 
@@ -812,9 +817,6 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
 
         with open(f'{DIR}/DB.pickle', 'wb') as f:
             pickle.dump(DB, f)
-
-        with open(f'{DIR}/dfg.pickle', 'wb') as f:
-            pickle.dump(dfg, f)
 
         print(time.time()-start_time)
 
@@ -1654,18 +1656,24 @@ def to_excel(DB,dfg,DIR='InstituLAC'):
 
 
 def dummy_fix_df(DB):
+    nones=False
     for i in range(len(DB)):
         for k in list(DB[i].keys())[2:]:
             for kk in  DB[i][k].keys():
                 #print(i,k,kk)
                 if list(DB[i][k][kk].values())[0] is None:
+                    nones=True
                     DB[i][k][kk]={kk: pd.DataFrame()} 
-    return DB
+    return DB,nones
 
         
-def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None,start_time=0):
+def main(user,password,DIR='InstituLAC',CHECKPOINT=True,headless=True,start=None,end=None,start_time=0):
+    '''
+    '''
     browser=login(user,password,headless=headless)
-    time.sleep(5)
+    time.sleep(2)
     DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end,start_time=start_time)
-    DB=dummy_fix_df(DB)
+    DB,nones=dummy_fix_df(DB)
+    if nones:
+        print('WARNING:Nones IN DB')
     to_excel(DB,dfg,DIR=DIR)        
