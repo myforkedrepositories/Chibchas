@@ -586,7 +586,7 @@ def get_groups(browser,sleep=0.8):
         time.sleep(sleep)
     return browser,dfg
 
-def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None):
+def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
     os.makedirs(DIR,exist_ok=True)
     browser,dfg=get_groups(browser)
     dfg = dfg.reset_index(drop=True)
@@ -815,6 +815,8 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None):
 
         with open(f'{DIR}/dfg.pickle', 'wb') as f:
             pickle.dump(dfg, f)
+
+        print(time.time()-start_time)
 
     browser.close()    
     return DB,dfg
@@ -1661,9 +1663,9 @@ def dummy_fix_df(DB):
     return DB
 
         
-def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None):
+def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None,start_time=0):
     browser=login(user,password,headless=headless)
     time.sleep(5)
-    DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end)
+    DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end,start_time=start_time)
     DB=dummy_fix_df(DB)
     to_excel(DB,dfg,DIR=DIR)        
