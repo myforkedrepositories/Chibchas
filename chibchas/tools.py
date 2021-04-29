@@ -1652,18 +1652,24 @@ def to_excel(DB,dfg,DIR='InstituLAC'):
 
 
 def dummy_fix_df(DB):
+    nones=False
     for i in range(len(DB)):
         for k in list(DB[i].keys())[2:]:
             for kk in  DB[i][k].keys():
                 #print(i,k,kk)
                 if list(DB[i][k][kk].values())[0] is None:
+                    nones=True
                     DB[i][k][kk]={kk: pd.DataFrame()} 
-    return DB
+    return DB,nones
 
         
-def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None):
+def main(user,password,DIR='InstituLAC',headless=True,start=None,end=None,CHECKPOINT=False):
+    '''
+    '''
     browser=login(user,password,headless=headless)
-    time.sleep(5)
+    time.sleep(2)
     DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end)
-    DB=dummy_fix_df(DB)
+    DB,nones=dummy_fix_df(DB)
+    if nones:
+        print('WARNING:Nones IN DB')
     to_excel(DB,dfg,DIR=DIR)        
