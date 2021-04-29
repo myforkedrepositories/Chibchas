@@ -590,9 +590,10 @@ def get_groups(browser,sleep=0.8):
         pickle.dump(dfg, f)        
     return browser,dfg
 
-def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
+def get_DB(browser,DB=[],dfg=pd.DataFrame(),sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
     os.makedirs(DIR,exist_ok=True)
-    browser,dfg=get_groups(browser)
+    if dfg.empty:
+        browser,dfg=get_groups(browser)
     dfg = dfg.reset_index(drop=True)
     assert dfg.shape[0] == 324
     # DICT CAT-PRODS-TAB
@@ -601,7 +602,6 @@ def get_DB(browser,sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
 
     time.sleep(sleep*2)
 
-    DB = [] # 
     LP = []
     LR = [] 
     for idx in dfg.index[start:end]:       # TEST
@@ -1666,13 +1666,35 @@ def dummy_fix_df(DB):
                     DB[i][k][kk]={kk: pd.DataFrame()} 
     return DB,nones
 
-        
+def checkpoint(DIR='InstituLAC',CHECKPOINT=True):
+    with open(f'{DIR}/DB.pickle', 'rb') as f:
+        DB=pickle.load(f)
+    with open(f'{DIR}/dfg.pickle', 'rb') as f:
+        dfg=pickle.load(f)    
+
+    oldend=len(DB)-1
+    try:
+        if ( dfg.loc[oldend]['Nombre del grupo'] == 
+             DB[oldend]['Info_group']['Nombre Grupo'].dropna().iloc[-1]
+            and CHECKPOINT):
+            start=oldend+1
+            return DB,dfg,start
+    except:
+        return [],pd.DataFrame(),None
+
 def main(user,password,DIR='InstituLAC',CHECKPOINT=True,headless=True,start=None,end=None,start_time=0):
     '''
     '''
     browser=login(user,password,headless=headless)
     time.sleep(2)
-    DB,dfg=get_DB(browser,DIR=DIR,start=start,end=end,start_time=start_time)
+
+    DB,dfg,start=checkpoint(DIR=DIR,CHECKPOINT=CHECKPOINT)
+    print('*'*80)
+    print(f'start → {len(DB)}')
+    print('*'*80)
+
+    DB,dfg=get_DB(browser,DB=DB,dfg=dfg,DIR=DIR,start=start,end=end,start_time=start_time)
+
     DB,nones=dummy_fix_df(DB)
     if nones:
         print('WARNING:Nones IN DB')
