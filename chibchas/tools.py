@@ -839,7 +839,9 @@ def to_excel(DB,dfg,DIR='InstituLAC'):
         cod_gr = dfg.loc[idxx,'COL Grupo']
 
         # initialize object= output excel file
-        writer = pd.ExcelWriter(f'{DIR}/{name}{cod_gr}.xlsx', engine='xlsxwriter')
+        os.makedirs(f'{DIR}/{cod_gr}',exist_ok=True)
+        os.makedirs(f'{DIR}/{cod_gr}/Repositorio_digital_{cod_gr}',exist_ok=True)
+        writer = pd.ExcelWriter(f'{DIR}/{cod_gr}/{name}{cod_gr}.xlsx', engine='xlsxwriter')
 
         workbook=writer.book
 
@@ -1692,6 +1694,8 @@ def main(user,password,DIR='InstituLAC',CHECKPOINT=True,headless=True,start=None
     print('*'*80)
     print(f'start → {len(DB)}')
     print('*'*80)
+    if end and end<=start:
+        sys.exit('ERROR! end<=start')
 
     DB,dfg=get_DB(browser,DB=DB,dfg=dfg,DIR=DIR,start=start,end=end,start_time=start_time)
 
