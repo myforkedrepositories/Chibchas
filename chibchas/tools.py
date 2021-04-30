@@ -4,7 +4,7 @@ import re
 import time
 import getpass
 import os
-
+import sys
 
 #requirements
 import json
@@ -334,7 +334,9 @@ def format_info(df, writer, sheet_name):
     #Prepare image insertion: See → https://xlsxwriter.readthedocs.io/example_images.html
     worksheet.set_column('A:A', 15)
     worksheet.set_column('B:B', 15)
-    worksheet.insert_image('A1', 'img/udea.jpeg')
+
+    logo_path = __file__[0:len(__file__)-8] + '/templates/img/logo.jpeg'
+    worksheet.insert_image('A1', logo_path)
     
     # title 1 UNIVERSIDAD DE ANTIOQUIA
     title = workbook.add_format({'font_size':16,'center_across':True})
@@ -427,7 +429,8 @@ def format_ptt(workbook):
     #Prepare image insertion: See → https://xlsxwriter.readthedocs.io/example_images.html
     worksheet.set_column('A:A', 15)
     worksheet.set_column('B:B', 15)
-    worksheet.insert_image('A1', 'img/udea.jpeg')
+    logo_path = __file__[0:len(__file__)-8] + '/templates/img/logo.jpeg'
+    worksheet.insert_image('A1', logo_path)
     #Prepare text insertion: See  → https://xlsxwriter.readthedocs.io/example_images.html
     worksheet.set_column('C:C', 140,general)
     worksheet.set_row_pixels(0, 60)
@@ -532,7 +535,7 @@ def login(user,password,sleep=0.8,headless=True):
     h.select(browser.find_element_by_xpath('//table[@id="grupos_avalados"]//select[@name="maxRows"]'),'100')
     return browser
 
-def get_groups(browser,sleep=0.8):
+def get_groups(browser,DIR='InstituLAC',sleep=0.8):
     # catch 1: groups info [name, lider, cod,  link to producs]  
     # schema
     # empty df
@@ -593,12 +596,15 @@ def get_groups(browser,sleep=0.8):
 def get_DB(browser,DB=[],dfg=pd.DataFrame(),sleep=0.8,DIR='InstituLAC',start=None,end=None,start_time=0):
     os.makedirs(DIR,exist_ok=True)
     if dfg.empty:
-        browser,dfg=get_groups(browser)
+        browser,dfg=get_groups(browser,DIR=DIR,sleep=sleep)
     dfg = dfg.reset_index(drop=True)
     assert dfg.shape[0] == 324
     # DICT CAT-PRODS-TAB
-    with open('dict_tables.json') as file_json:
-        dict_tables=json.loads(file_json.read())
+    dict_tables_path = __file__[0:len(__file__)-8] + '/dict_tables.json'
+    with open(dict_tables_path) as file_json:
+       dict_tables=json.loads(file_json.read())    
+    #with open('dict_tables.json') as file_json:
+    #    dict_tables=json.loads(file_json.read())
 
     time.sleep(sleep*2)
 
@@ -1669,13 +1675,18 @@ def dummy_fix_df(DB):
     return DB,nones
 
 def checkpoint(DIR='InstituLAC',CHECKPOINT=True):
-    with open(f'{DIR}/DB.pickle', 'rb') as f:
-        DB=pickle.load(f)
-    with open(f'{DIR}/dfg.pickle', 'rb') as f:
-        dfg=pickle.load(f)    
-
-    oldend=len(DB)-1
+    DB_path=f'{DIR}/DB.pickle'
+    dfg_path=f'{DIR}/dfg.pickle'
+    if os.path.exists(DB_path) and os.path.exists(DB_path):
+        with open(DB_path, 'rb') as f:
+            DB=pickle.load(f)
+        with open(dfg_path, 'rb') as f:
+            dfg=pickle.load(f)    
+    else:
+        CHECKPOINT=False    
+        
     try:
+        oldend=len(DB)-1
         if ( dfg.loc[oldend]['Nombre del grupo'] == 
              DB[oldend]['Info_group']['Nombre Grupo'].dropna().iloc[-1]
             and CHECKPOINT):
@@ -1694,7 +1705,7 @@ def main(user,password,DIR='InstituLAC',CHECKPOINT=True,headless=True,start=None
     print('*'*80)
     print(f'start → {len(DB)}')
     print('*'*80)
-    if end and end<=start:
+    if end and start and end<=start:
         sys.exit('ERROR! end<=start')
 
     DB,dfg=get_DB(browser,DB=DB,dfg=dfg,DIR=DIR,start=start,end=end,start_time=start_time)
